@@ -32,43 +32,86 @@ print(w_ratio)
 print(h_ratio)
 
 import numpy as np
+import matplotlib.pyplot as plt
+
 disp = np.load('15001_disp.npy')
+print(disp)
+plt.set_cmap('hot')
+plt.imshow(disp)
 disp_h = disp.shape[0]
 disp_w = disp.shape[1]
 dispCenter = [disp_h/2.0,disp_w/2.0]
 
-def fivInt(val):
-    if val % 5 == 0:
+def tenInt(val):
+    rem = val%10
+    if rem == 0:
         return val
+    elif rem < 5:
+        return val-rem
     else:
-        return val+(5-(val % 5))
+        return val-rem+10
 
 #window dimensions
-win_w = fivInt(round(disp_w*w_ratio))
+win_w = tenInt(round(disp_w*w_ratio))
 win_h = round(disp_h*h_ratio)
+micro_win_w = int(win_w/10)
+micro_win_h = int(win_h)
+grid_size_w = 50
+grid_size_h = 9
 print(win_w)
 print(win_h)
 
 def addList(l1,l2):
     return [x+y for x,y in zip(l1,l2)]
 
-def MakeWindow(center):
-    half_w = round(win_w/2.0)
-    half_h = round(win_h/2.0)
-    TL = addList(center,[-1*half_w,half_h])
-    TR = addList(center,[half_w,half_h])
-    BL = addList(center,[-1*half_w,-1*half_h])
-    BR = addList(center,[half_w,-1*half_h])
-    boxCords = [TL,TR,BL,BR]
-    return boxCords
+def MakeMicroWinCords(disp_h,disp_w):
+    TL = [int(disp_h*0.5 + 4.5*win_h) , int(disp_w*0.5 - 2.5*win_w)]
+    print(TL)
+    grid_cords = [[0 for x in range(grid_size_w)] for y in range(grid_size_h)] #colsxrows
+    for i in range(grid_size_h):
+        for j in range(grid_size_w):
+            grid_cords[i][j] = [TL[0]-micro_win_h*i,TL[1]+micro_win_w*j]
+    return grid_cords
 
-class CoarseGrid():
-    def __init__(self,BlockCenter):
-        self.BlockCenter = BlockCenter
-        self.cords = MakeWindow(self.BlockCenter)
 
-x = CoarseGrid([0,0])
-print(x.cords)
+scan_order = [4,3,5,2,6,1,7,0,8] #scanning columns
 
-boxCords = MakeWindow([0,0])
-print(boxCords)
+DISPARITY_THRESHOLD = 0.012 #################################
+def EvalCell(TL,disp):
+    sum = 0
+    for i in range(micro_win_h):
+        for j in range(micro_win_w):
+            sum = sum+disp[TL[0]-i , TL[1]+j] #top to down , left to right
+    avg = sum/(micro_win_h*micro_win_w)
+    if avg < DISPARITY_THRESHOLD:
+        return 1 #mark as safe
+    else:
+        return 0 #about to collide
+
+def CreateSafeMap(grid_cords,disp):
+    safe_map = [[0 for w in range(grid_size_w)] for h in range(grid_size_h)]
+    for i in range(grid_size_h):
+        for j in range(grid_size_w):
+            safe_map[i][j] = EvalCell(grid_cords[i][j],disp)
+    return safe_map
+
+grid_cords = MakeMicroWinCords(disp_h,disp_w)
+# dispp = np.random.rand(disp_h,disp_w)
+mapp = CreateSafeMap(grid_cords,disp)
+print(mapp)
+
+
+plt.set_cmap('hot')
+plt.imshow(mapp)
+plt.show()
+# class Grid():
+#     def __init__(self,disp_width,disp_height):
+#         self.disp_width = disp_width
+#         self.disp_height = disp_height
+#         self.grid_cords = MakeMicroWinCords(disp_width,disp_height)
+#         self.scan_order = [4,3,5,2,6,1,7,0,8] #scanning columns
+#         self.safe_map = [[0 for x in range(grid_size_w)] for y in range(grid_size_h)]
+#
+#     def MakeSafeMap(self.safe_map,self.scan_order,self.grid_cords,)
+# x = Grid(disp_w,disp_h)
+# print(x.grid_cords)
