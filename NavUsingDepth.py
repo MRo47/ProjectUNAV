@@ -54,29 +54,31 @@ def tenInt(val):
 #window dimensions
 win_w = tenInt(round(disp_w*w_ratio))
 win_h = round(disp_h*h_ratio)
-micro_win_w = int(win_w/10)
+drone_to_object_ratio = 10
+micro_win_w = int(win_w/drone_to_object_ratio)
 micro_win_h = int(win_h)
-grid_size_w = 50
+grid_size_w = 5
 grid_size_h = 9
+micro_grid_size_w = grid_size_w*drone_to_object_ratio
+micro_grid_size_h = grid_size_h
 print(win_w)
 print(win_h)
-
-def addList(l1,l2):
-    return [x+y for x,y in zip(l1,l2)]
 
 def MakeMicroWinCords(disp_h,disp_w):
     TL = [int(disp_h*0.5 + 4.5*win_h) , int(disp_w*0.5 - 2.5*win_w)]
     print(TL)
-    grid_cords = [[0 for x in range(grid_size_w)] for y in range(grid_size_h)] #colsxrows
-    for i in range(grid_size_h):
-        for j in range(grid_size_w):
+    grid_cords = [[0 for x in range(micro_grid_size_w)] for y in range(micro_grid_size_h)] #colsxrows
+    for i in range(micro_grid_size_h):
+        for j in range(micro_grid_size_w):
             grid_cords[i][j] = [TL[0]-micro_win_h*i,TL[1]+micro_win_w*j]
     return grid_cords
 
 
 scan_order = [4,3,5,2,6,1,7,0,8] #scanning columns
 
-DISPARITY_THRESHOLD = 0.012 #################################
+disp_mean = np.mean(disp)
+print(disp_mean)
+DISPARITY_THRESHOLD =  disp_mean #################################
 def EvalCell(TL,disp):
     sum = 0
     for i in range(micro_win_h):
@@ -84,34 +86,57 @@ def EvalCell(TL,disp):
             sum = sum+disp[TL[0]-i , TL[1]+j] #top to down , left to right
     avg = sum/(micro_win_h*micro_win_w)
     if avg < DISPARITY_THRESHOLD:
-        return 1 #mark as safe
+        return 0 #mark as safe
     else:
-        return 0 #about to collide
+        return 1 #about to collide
 
-def CreateSafeMap(grid_cords,disp):
-    safe_map = [[0 for w in range(grid_size_w)] for h in range(grid_size_h)]
-    for i in range(grid_size_h):
-        for j in range(grid_size_w):
-            safe_map[i][j] = EvalCell(grid_cords[i][j],disp)
-    return safe_map
+def CreateCollisionMap(grid_cords,disp):
+    collision_map = [[0 for w in range(micro_grid_size_w)] for h in range(micro_grid_size_h)]
+    for i in range(micro_grid_size_h):
+        for j in range(micro_grid_size_w):
+            collision_map[i][j] = EvalCell(grid_cords[i][j],disp)
+    return collision_map
+
+def ReduceMap(safe_map):
+    reduced_map = [[0 for w in range(micro_grid_size_w-drone_to_object_ratio+1)] for h in range(micro_grid_size_h)]
+    for i in range(micro_grid_size_h):
+        for j in range(micro_grid_size_w-drone_to_object_ratio+1):
+            if sum(safe_map[i][j:j+drone_to_object_ratio]) > 0:
+                reduced_map[i][j] = 1 #collision predicted
+            else:
+                reduced_map[i][j] = 0
+    return reduced_map
 
 grid_cords = MakeMicroWinCords(disp_h,disp_w)
+# grid_cordsmap = np.asarray(grid_cords)
+# print(grid_cordsmap.shape)
 # dispp = np.random.rand(disp_h,disp_w)
-mapp = CreateSafeMap(grid_cords,disp)
-print(mapp)
-
-
-plt.set_cmap('hot')
-plt.imshow(mapp)
+coll_map = CreateCollisionMap(grid_cords,disp)
+print(coll_map)
+plt.set_cmap('Greys')
+plt.imshow(coll_map)
+red_map = ReduceMap(coll_map)
+print(red_map)
+plt.set_cmap('Greys')
+plt.imshow(red_map)
 plt.show()
+#check for clear window
+def ClearWindow(micro_windows):
+    if sum(micro_windows) == 0: #if no possible collision
+        return 1 #send Clear
+    else:
+        return 0 #send not clear
+
+def CheckSlice():
+
 # class Grid():
 #     def __init__(self,disp_width,disp_height):
 #         self.disp_width = disp_width
 #         self.disp_height = disp_height
 #         self.grid_cords = MakeMicroWinCords(disp_width,disp_height)
 #         self.scan_order = [4,3,5,2,6,1,7,0,8] #scanning columns
-#         self.safe_map = [[0 for x in range(grid_size_w)] for y in range(grid_size_h)]
+#         self.collision_map = [[0 for x in range(micro_grid_size_w)] for y in range(micro_grid_size_h)]
 #
-#     def MakeSafeMap(self.safe_map,self.scan_order,self.grid_cords,)
+#     def MakeSafeMap(self.collision_map,self.scan_order,self.grid_cords,)
 # x = Grid(disp_w,disp_h)
 # print(x.grid_cords)
