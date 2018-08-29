@@ -65,16 +65,13 @@ print(win_w)
 print(win_h)
 
 def MakeMicroWinCords(disp_h,disp_w):
-    TL = [int(disp_h*0.5 + 4.5*win_h) , int(disp_w*0.5 - 2.5*win_w)]
+    TL = [int(disp_h/2 + grid_size_h*win_h/2) , int(disp_w/2 - grid_size_w*win_w/2)]
     print(TL)
-    grid_cords = [[0 for x in range(micro_grid_size_w)] for y in range(micro_grid_size_h)] #colsxrows
+    grid_cords = [[0 for x in range(micro_grid_size_w)] for y in range(micro_grid_size_h)] #cols x rows
     for i in range(micro_grid_size_h):
         for j in range(micro_grid_size_w):
             grid_cords[i][j] = [TL[0]-micro_win_h*i,TL[1]+micro_win_w*j]
     return grid_cords
-
-
-scan_order = [4,3,5,2,6,1,7,0,8] #scanning columns
 
 disp_mean = np.mean(disp)
 print(disp_mean)
@@ -97,46 +94,51 @@ def CreateCollisionMap(grid_cords,disp):
             collision_map[i][j] = EvalCell(grid_cords[i][j],disp)
     return collision_map
 
-def ReduceMap(safe_map):
-    reduced_map = [[0 for w in range(micro_grid_size_w-drone_to_object_ratio+1)] for h in range(micro_grid_size_h)]
+def ReduceMap(collision_map):
+    reduced_map = [[0 for w in range(micro_grid_size_w - drone_to_object_ratio + 1)] for h in range(micro_grid_size_h)]
     for i in range(micro_grid_size_h):
-        for j in range(micro_grid_size_w-drone_to_object_ratio+1):
-            if sum(safe_map[i][j:j+drone_to_object_ratio]) > 0:
+        for j in range(micro_grid_size_w - drone_to_object_ratio+1):
+            if sum(collision_map[i][j : j + drone_to_object_ratio]) > 0:
                 reduced_map[i][j] = 1 #collision predicted
             else:
                 reduced_map[i][j] = 0
     return reduced_map
 
+def lshape(lst):
+    x = len(lst)
+    y = len(lst[0])
+    print(f'rows = {x}, columns = {y}')
+
+def ScanLineGenerator(x): #center first border last scan
+    x_center = int(x/2)
+    x_line = [0 for a in range(x)]
+    x_line[0] = x_center
+    x_sign = -1
+    for i in range(x-1):
+        x_line[i+1] = x_line[i] + x_sign*(i+1)
+        x_sign = -1*x_sign
+    return x_line
+
+def FindBestPolicy(red_coll_map,row_scan_order,col_scan_order): #find the first non colliding cell
+    for i in row_scan_order:
+        for j in col_scan_order:
+            if red_coll_map[i][j] == 0: #no possible collision
+                return i,j
+
 grid_cords = MakeMicroWinCords(disp_h,disp_w)
-# grid_cordsmap = np.asarray(grid_cords)
-# print(grid_cordsmap.shape)
-# dispp = np.random.rand(disp_h,disp_w)
 coll_map = CreateCollisionMap(grid_cords,disp)
-print(coll_map)
+red_map = ReduceMap(coll_map)
+lshape(coll_map)
+lshape(red_map)
+row_scan_order = ScanLineGenerator(len(red_map))
+col_scan_order = ScanLineGenerator(len(red_map[0]))
+best_y,best_x = FindBestPolicy(red_map,row_scan_order,col_scan_order)
+
+print(f'row scan order {row_scan_order}')
+print(f'col scan order {col_scan_order}')
+print(f'best coord = {best_y},{best_x}')
 plt.set_cmap('Greys')
 plt.imshow(coll_map)
-red_map = ReduceMap(coll_map)
-print(red_map)
 plt.set_cmap('Greys')
 plt.imshow(red_map)
 plt.show()
-#check for clear window
-def ClearWindow(micro_windows):
-    if sum(micro_windows) == 0: #if no possible collision
-        return 1 #send Clear
-    else:
-        return 0 #send not clear
-
-def CheckSlice():
-
-# class Grid():
-#     def __init__(self,disp_width,disp_height):
-#         self.disp_width = disp_width
-#         self.disp_height = disp_height
-#         self.grid_cords = MakeMicroWinCords(disp_width,disp_height)
-#         self.scan_order = [4,3,5,2,6,1,7,0,8] #scanning columns
-#         self.collision_map = [[0 for x in range(micro_grid_size_w)] for y in range(micro_grid_size_h)]
-#
-#     def MakeSafeMap(self.collision_map,self.scan_order,self.grid_cords,)
-# x = Grid(disp_w,disp_h)
-# print(x.grid_cords)
