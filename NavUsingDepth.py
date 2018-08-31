@@ -38,7 +38,7 @@ print(f'height ratio {h_ratio}')
 import numpy as np
 import matplotlib.pyplot as plt
 
-disp = np.load('15001_disp.npy')
+disp = np.load('15012_disp.npy')
 disp_h = disp.shape[0]
 disp_w = disp.shape[1]
 dispCenter = [disp_w/2.0,disp_h/2.0]
@@ -140,7 +140,7 @@ def FindCoordinate(x , y , grid_cords):
 def CalculateVector(disp_center , disp_waypoint):
     img_waypoint_px = [disp_waypoint[0]*I2D_w , disp_waypoint[1]*I2D_h] #scale to image size in px
     img_waypoint_m = [img_waypoint_px[0]/w_px_density, img_waypoint_px[1]/h_px_density] #convert in meters
-    way_point = [img_waypoint[0]*d/f , img_waypoint[1]*d/f] #convert to real world coordinates at min collision distance
+    way_point = [img_waypoint_m[0]*d/f , img_waypoint_m[1]*d/f] #convert to real world coordinates at min collision distance
     return way_point,img_waypoint_px
 
 grid_cords = MakeMicroWinCords(disp_h,disp_w)
@@ -157,7 +157,6 @@ if disp_way_point == dispCenter:
     print('Straight')
 else:
     way_point,img_waypoint_px = CalculateVector(dispCenter,disp_way_point)
-    roll,pitch,yaw
     print(f'world way point = {way_point}')
     print(f'img way point = {img_waypoint_px}')
 
@@ -166,18 +165,31 @@ print(f'col scan order {col_scan_order}')
 print(f'best coord = {best_x},{best_y}')
 print(f'way_point {disp_way_point}')
 
+#plotting results
+
 from matplotlib.patches import Arrow
-patch = Arrow(dispCenter[0], dispCenter[1], disp_way_point[0] - dispCenter[0] , disp_way_point[1] - dispCenter[1], width=10., color='green')
 
-fig, ax = plt.subplots(1)
-ax.imshow(disp)
-ax.add_patch(patch)
-plt.show(fig)
-
-plt.set_cmap('hot')
+plt.set_cmap('plasma')
 plt.imshow(disp)
+
 plt.set_cmap('Greys')
 plt.imshow(coll_map)
+
 plt.set_cmap('Greys')
 plt.imshow(red_map)
-plt.show()
+
+fig4, ax4 = plt.subplots(1)
+plt.set_cmap('plasma')
+ax4.imshow(disp)
+patch = Arrow(dispCenter[0], dispCenter[1], disp_way_point[0] - dispCenter[0] , disp_way_point[1] - dispCenter[1], width=10, color='red')
+ax4.add_patch(patch)
+plt.show(fig4)
+
+import matplotlib.image as mpimg
+img = mpimg.imread('15012.jpg')
+fig5, ax5 = plt.subplots(1)
+ax5.imshow(img)
+img_center = [IMAGE_W/2 , IMAGE_H/2]
+patch2 = Arrow(img_center[0], img_center[1], img_waypoint_px[0] - img_center[0] , img_waypoint_px[1] - img_center[1], width=20, color='yellow')
+ax5.add_patch(patch2)
+plt.show(fig5)
