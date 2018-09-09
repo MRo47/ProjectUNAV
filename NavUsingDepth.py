@@ -38,7 +38,7 @@ print(f'height ratio {h_ratio}')
 import numpy as np
 import matplotlib.pyplot as plt
 
-img_name = '15026'
+img_name = '15012'
 disp_name = img_name+'_disp.npy'
 image_name = img_name+'.jpg'
 disp = np.load(disp_name)
@@ -166,6 +166,7 @@ print(f'way_point {disp_way_point}')
 from matplotlib.patches import Arrow
 from matplotlib.patches import Circle
 import matplotlib.image as mpimg
+#from pylab import savefig
 
 fig1,ax1 = plt.subplots(1)
 plt.set_cmap('plasma')
@@ -173,11 +174,16 @@ ax1.imshow(disp)
 
 fig2,ax2 = plt.subplots(1)
 plt.set_cmap('Greys')
+# ax2 = fig2.add_subplot(111)
+#mpimg.imsave(img_name+'_coll_map.jpg', coll_map,cmap='Greys',dpi=1000)
 ax2.imshow(coll_map,aspect = 2.5)
+fig2.savefig(img_name+'_coll_map.jpg',bbox_inches = 'tight', dpi = 300)
 
 fig3,ax3 = plt.subplots(1)
 plt.set_cmap('Greys')
+#mpimg.imsave(img_name+'_red_map.jpg', red_map,cmap='Greys',dpi=1000)
 ax3.imshow(red_map,aspect = 1.72)
+fig3.savefig(img_name+'_red_map.jpg',bbox_inches = 'tight', dpi = 300)
 
 if disp_way_point == dispCenter:
     print('Straight')
@@ -186,6 +192,7 @@ if disp_way_point == dispCenter:
     ax4.imshow(disp)
     patch3 = Circle((dispCenter[0],dispCenter[1]),radius=7,color='red')
     ax4.add_patch(patch3)
+    plt.savefig(img_name+'_disp_dir.jpg',bbox_inches = 'tight', dpi = 300)
     plt.show(fig4)
 
     img = mpimg.imread(image_name)
@@ -194,6 +201,7 @@ if disp_way_point == dispCenter:
     img_center = [IMAGE_W/2 , IMAGE_H/2]
     patch4 = Circle((img_center[0], img_center[1]),radius=7,color='yellow')
     ax5.add_patch(patch4)
+    plt.savefig(img_name+'_img_dir.jpg',bbox_inches = 'tight', dpi = 300)
     plt.show(fig5)
 
 else:
@@ -206,6 +214,7 @@ else:
     ax4.imshow(disp)
     patch = Arrow(dispCenter[0], dispCenter[1], disp_way_point[0] - dispCenter[0] , disp_way_point[1] - dispCenter[1], width=10, color='red')
     ax4.add_patch(patch)
+    plt.savefig(img_name+'_disp_dir.jpg',bbox_inches = 'tight', dpi = 300)
     plt.show(fig4)
 
 
@@ -215,4 +224,5 @@ else:
     img_center = [IMAGE_W/2 , IMAGE_H/2]
     patch2 = Arrow(img_center[0], img_center[1], img_waypoint_px[0] - img_center[0] , img_waypoint_px[1] - img_center[1], width=20, color='yellow')
     ax5.add_patch(patch2)
+    plt.savefig(img_name+'_img_dir.jpg',bbox_inches = 'tight', dpi = 300)
     plt.show(fig5)
