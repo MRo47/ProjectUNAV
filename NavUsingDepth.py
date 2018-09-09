@@ -38,7 +38,10 @@ print(f'height ratio {h_ratio}')
 import numpy as np
 import matplotlib.pyplot as plt
 
-disp = np.load('15012_disp.npy')
+img_name = '15026'
+disp_name = img_name+'_disp.npy'
+image_name = img_name+'.jpg'
+disp = np.load(disp_name)
 disp_h = disp.shape[0]
 disp_w = disp.shape[1]
 dispCenter = [disp_w/2.0,disp_h/2.0]
@@ -60,8 +63,8 @@ def tenInt(val):
 
 #window dimensions
 win_w = tenInt(round(disp_w*w_ratio))
-print(win_w)
 win_h = round(disp_h*h_ratio)
+print(win_h)
 drone_to_object_ratio = 10
 micro_win_w = int(win_w/drone_to_object_ratio)
 micro_win_h = int(win_h)
@@ -153,13 +156,6 @@ col_scan_order = ScanLineGenerator(len(red_map[0]))
 best_x,best_y = FindBestPolicy(red_map,row_scan_order,col_scan_order)
 disp_way_point = FindCoordinate(best_x,best_y,grid_cords)
 
-if disp_way_point == dispCenter:
-    print('Straight')
-else:
-    way_point,img_waypoint_px = CalculateVector(dispCenter,disp_way_point)
-    print(f'world way point = {way_point}')
-    print(f'img way point = {img_waypoint_px}')
-
 print(f'row scan order {row_scan_order}')
 print(f'col scan order {col_scan_order}')
 print(f'best coord = {best_x},{best_y}')
@@ -168,28 +164,55 @@ print(f'way_point {disp_way_point}')
 #plotting results
 
 from matplotlib.patches import Arrow
-
-plt.set_cmap('plasma')
-plt.imshow(disp)
-
-plt.set_cmap('Greys')
-plt.imshow(coll_map)
-
-plt.set_cmap('Greys')
-plt.imshow(red_map)
-
-fig4, ax4 = plt.subplots(1)
-plt.set_cmap('plasma')
-ax4.imshow(disp)
-patch = Arrow(dispCenter[0], dispCenter[1], disp_way_point[0] - dispCenter[0] , disp_way_point[1] - dispCenter[1], width=10, color='red')
-ax4.add_patch(patch)
-plt.show(fig4)
-
+from matplotlib.patches import Circle
 import matplotlib.image as mpimg
-img = mpimg.imread('15012.jpg')
-fig5, ax5 = plt.subplots(1)
-ax5.imshow(img)
-img_center = [IMAGE_W/2 , IMAGE_H/2]
-patch2 = Arrow(img_center[0], img_center[1], img_waypoint_px[0] - img_center[0] , img_waypoint_px[1] - img_center[1], width=20, color='yellow')
-ax5.add_patch(patch2)
-plt.show(fig5)
+
+fig1,ax1 = plt.subplots(1)
+plt.set_cmap('plasma')
+ax1.imshow(disp)
+
+fig2,ax2 = plt.subplots(1)
+plt.set_cmap('Greys')
+ax2.imshow(coll_map,aspect = 2.5)
+
+fig3,ax3 = plt.subplots(1)
+plt.set_cmap('Greys')
+ax3.imshow(red_map,aspect = 1.72)
+
+if disp_way_point == dispCenter:
+    print('Straight')
+    fig4, ax4 = plt.subplots(1)
+    plt.set_cmap('plasma')
+    ax4.imshow(disp)
+    patch3 = Circle((dispCenter[0],dispCenter[1]),radius=7,color='red')
+    ax4.add_patch(patch3)
+    plt.show(fig4)
+
+    img = mpimg.imread(image_name)
+    fig5, ax5 = plt.subplots(1)
+    ax5.imshow(img)
+    img_center = [IMAGE_W/2 , IMAGE_H/2]
+    patch4 = Circle((img_center[0], img_center[1]),radius=7,color='yellow')
+    ax5.add_patch(patch4)
+    plt.show(fig5)
+
+else:
+    way_point,img_waypoint_px = CalculateVector(dispCenter,disp_way_point)
+    print(f'world way point = {way_point}')
+    print(f'img way point = {img_waypoint_px}')
+
+    fig4, ax4 = plt.subplots(1)
+    plt.set_cmap('plasma')
+    ax4.imshow(disp)
+    patch = Arrow(dispCenter[0], dispCenter[1], disp_way_point[0] - dispCenter[0] , disp_way_point[1] - dispCenter[1], width=10, color='red')
+    ax4.add_patch(patch)
+    plt.show(fig4)
+
+
+    img = mpimg.imread(image_name)
+    fig5, ax5 = plt.subplots(1)
+    ax5.imshow(img)
+    img_center = [IMAGE_W/2 , IMAGE_H/2]
+    patch2 = Arrow(img_center[0], img_center[1], img_waypoint_px[0] - img_center[0] , img_waypoint_px[1] - img_center[1], width=20, color='yellow')
+    ax5.add_patch(patch2)
+    plt.show(fig5)
